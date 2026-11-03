@@ -22,7 +22,7 @@ UEditor 是十年间中文互联网使用最广的富文本编辑器之一，官
 | API 风格 | 借鉴 wangEditor 5 的**架构模式**（不引入其已停更的引擎）：monorepo 分层、`MENU_CONF` 每菜单独立配置、`register*` 扩展 API、`toolbarKeys` 裁剪、`mode: default/simple` |
 | 功能范围 | 务实完整复刻：保留所有今日仍可用的能力；依赖已停服第三方服务的老功能（高德/百度地图、音乐插入、webapp、截屏）提供扩展点而非死代码 |
 | 技术栈 | Vue 3 + TypeScript + Vite + pnpm monorepo |
-| 服务端 | 对接 Laravel（按协议契约自研，不使用原版 demo 后端） |
+| 服务端 | 对接自有 **PHP + MySQL** 端点（按协议契约实现，不使用原版 demo 后端；本项目仅交付契约文档不写后端代码） |
 | 浏览器 | 仅现代浏览器（Chrome/Edge/Firefox/Safari），放弃 IE |
 
 ## 规划架构
@@ -73,7 +73,7 @@ const html = ref('<p>hello</p>');
 </template>
 ```
 
-## 服务端契约（Laravel 对接）
+## 服务端契约（PHP + MySQL 对接）
 
 沿用并现代化 UEditor 的 action 分发协议（配置拉取 `config`、远程抓图 `catchimage`、涂鸦 `uploadscrawl` 已随功能裁撤；传输层从 jsonp/表单-iframe POST 升级为 fetch/XHR + CORS，字段不变）：
 
@@ -83,7 +83,7 @@ const html = ref('<p>hello</p>');
 | `listimage` / `listfile` | GET | 文件管理器分页，`{ state, list, start, total }` |
 | `removeimage` / `removefile` | POST | 可选实现；必须鉴权 + 路径围栏（仅允许删自家上传目录） |
 
-安全基线：文件扩展名/MIME 双白名单、大小与频率限制、图片二次编码剥离 EXIF、随机文件名、响应 `state` 错误串不回显路径——由 Laravel 端负责（本项目仅交付契约文档，不写后端代码）。
+安全基线：文件扩展名/MIME 双白名单、大小与频率限制、图片二次编码剥离 EXIF、随机文件名、响应 `state` 错误串不回显路径——由 PHP 后端负责（本项目仅交付契约文档，不写后端代码）。
 
 ## 安全与现代化要点
 

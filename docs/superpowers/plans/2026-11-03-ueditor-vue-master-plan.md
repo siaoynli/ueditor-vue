@@ -15,7 +15,7 @@
 - 直接依赖 ≤4（DOMPurify 常驻；ECharts/CodeMirror6/highlight.js 为懒加载 optional/peer）
 - `ueditor-dev-1.5.0/` 只读且已被 .gitignore（本地留档基准）；每迁移文件头注释标注源文件路径
 - 命令名 toLowerCase、`queryCommandState` 三值语义（-1/0/1）、粘贴链顺序（filterWord→filterNode→inputRules→beforepaste）不得偏离
-- 库内零 `v-html`/`innerHTML` 直插用户数据；注释中文（项目规则）；不写后端代码，Laravel 契约只出文档
+- 库内零 `v-html`/`innerHTML` 直插用户数据；注释中文（项目规则）；不写后端代码，PHP+MySQL 后端契约只出文档（2026-11-03 更正，原误记 Laravel）
 - 配置全前端化：无 `config` action 拉取；已裁撤功能（catchimage/scrawl/wordimage/snapscreen 内置实现）不出现在任何 API 面
 - 每个里程碑分支 `feat/m<N>-<名>`，PR 合入；里程碑级验收（金标准矩阵）绿才能进下一段
 

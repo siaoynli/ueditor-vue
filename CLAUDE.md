@@ -8,7 +8,7 @@
 
 - **改造路线（已裁决）：路线 B** —— 复用 UEditor 引擎（`_src/core` + `_src/plugins`，零 jQuery 依赖，迁移为 ESM/TS），废弃其 UI 层（`_src/ui` + 22 个 iframe dialogs），用 Vue 3 SFC 重写工具栏与弹窗。
 - **API 设计（已裁决）：只借鉴 wangEditor 5 的架构模式，不引入其引擎**（wangEditor 官方仓库 2022 年归档、2024 年停止维护，不得作为依赖）：monorepo 分包、`MENU_CONF` 式每菜单独立配置、`registerCommand/registerToolbarButton/registerDialog` 式扩展 API、`toolbarKeys` 工具栏裁剪、`mode: 'default'|'simple'` 两档预设。
-- **已确认约束**：仅支持现代浏览器（放弃 IE）；服务端对接 Laravel（自有 controller，禁用原版 demo PHP/Java 后端——官方 README 明示其含 SSRF 与文件包含漏洞）；已停服第三方功能（gmap/百度地图/音乐/webapp/截屏）按"务实复刻"处理：提供占位与扩展点，不保留死服务依赖。
+- **已确认约束**：仅支持现代浏览器（放弃 IE）；服务端对接**自有 PHP + MySQL 端点**（2026-11-03 用户更正，原误记 Laravel；禁用原版 demo PHP/Java connector——官方 README 明示其含 SSRF 与文件包含漏洞）；已停服第三方功能（gmap/百度地图/音乐/webapp/截屏）按"务实复刻"处理：提供占位与扩展点，不保留死服务依赖。
 
 ## UEditor 1.5.0 源码调研结论（迁移契约基准，改代码前必读）
 
@@ -36,7 +36,7 @@
 - 没有 `registerDialog` API；注册途径是 `editorui.js` 的 iframeUrlMap（24 项）+ `editor.ui._dialogs`。
 - 迁移结论：Vue 弹窗只要守住 execCommand 契约即可完全替换。两个特殊形态需显式建模：emotion 的 MultiMenuPop 弹层、source 模式的命令禁用劫持。
 
-### 4. 服务端通信协议（Laravel 端契约基准）
+### 4. 服务端通信协议（PHP+MySQL 后端契约基准；协议与后端栈无关）
 
 - URL 统一由 `getActionUrl(action)` 生成：`serverUrl + "?action=..."`。
 - action 全集：`config`、`uploadimage`、`uploadvideo`、`uploadfile`、`uploadscrawl`、`catchimage`、`listimage`、`listfile`（actionName 可经后端 config 响应覆写）。
@@ -99,7 +99,7 @@ ueditor-dev-1.5.0/  # 只读参考
 - TS 化策略：引擎迁移首批保持 JS 逻辑原样 + 挂手写 `.d.ts`，渐进转 TS；UI/适配层直接 TS。
 - 行为保真验收 = "金标准对照"：同一输入在新（原版）旧（Vue 版）编辑器并排执行同一命令序列，输出 HTML diff 一致（空白/属性序归一化后）。
 - 不修改 `ueditor-dev-1.5.0/` 目录任何文件；迁移是"复制或重写进 packages/"，用 Git 记录来源映射（每个迁移文件头注释标注源文件路径）。
-- 原版 PHP/Java 后端代码不迁移、不建议使用；Laravel 端接口按第 4 节协议另实现，校验（类型白名单、大小、频率、CSRF）在后端负责。
+- 原版 PHP/Java demo connector 代码不迁移、不建议直接使用；后端为 **PHP + MySQL 自有端点**（2026-11-03 用户更正，原计划文档误记 Laravel），接口按第 4 节协议实现，校验（类型白名单、大小、频率、CSRF）在后端负责；本项目只交付契约文档不写后端代码。
 
 ## 设计裁决记录（2026-11-03，全部通过）
 
@@ -109,6 +109,6 @@ ueditor-dev-1.5.0/  # 只读参考
 2. `_parse` 展示端**纳入**（`v-ueditor-parse` 指令 + 函数式 API；SyntaxHighlighter→highlight.js 懒加载；video-js 移除；停服占位→静态提示块）。
 3. charts 定为 **ECharts 懒加载 + 老 highcharts 数据适配器**。
 4. **裁撤**：远程图片抓取（catchremoteimage/wordimage/catchimage）、涂鸦（scrawl/uploadscrawl）；**新增**：剪贴板图片粘贴上传（默认走 uploadimage，开关 `pasteImageUpload`）。
-5. 交付边界：仅前端组件库，Laravel 契约只出文档；配置全前端化（无 config action 拉取）。
+5. 交付边界：仅前端组件库，后端（PHP+MySQL）契约只出文档；配置全前端化（无 config action 拉取）。
 6. 按钮扩展为显式承诺：`ToolbarButtonDef` 一次注册 → 工具栏/右键/快捷键/i18n/状态五处可寻址（规格 §8）。
 

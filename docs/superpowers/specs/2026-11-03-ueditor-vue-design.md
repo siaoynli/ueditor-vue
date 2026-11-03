@@ -13,7 +13,7 @@
 |---|---|---|
 | 改造路线 | 路线 B：复用 `_src/core`+`_src/plugins` 引擎（零 jQuery），废弃 `_src/ui`+22 iframe dialogs，Vue 重写 | 批准 |
 | API 风格 | 借鉴 wangEditor 5 架构模式（monorepo/MENU_CONF/registerX/toolbarKeys/mode），**不引入其停更引擎** | 批准 |
-| 交付边界 | 仅前端组件库；Laravel 端只出契约文档，**不写后端代码** | 批准 |
+| 服务端 | **PHP + MySQL**（用户 2026-11-03 更正，原误记 Laravel）：对接自有 PHP 端点，契约只出文档不写后端代码；仍禁用原版 demo PHP/Java connector（官方自述 SSRF/文件包含漏洞） | 批准 |
 | 配置模型 | 全前端化：废除 `?action=config` 拉取与 `loadconfig/serverConfigLoaded`，内置默认值 + props 覆写，组件设置越简单越好 | 批准 |
 | 功能取舍 | 删除：远程图片抓取（catchremoteimage/wordimage/catchimage）、涂鸦（scrawl/uploadscrawl）。新增：剪贴板图片粘贴上传。charts 用 ECharts。`_parse` 展示端纳入 | 批准 |
 | 扩展性 | 按钮级扩展为显式设计承诺：注册一个描述对象即可新增按钮，零修改库源码 | 批准 |
@@ -160,7 +160,7 @@ gmap / 百度地图 / 音乐插入 / webapp / snapscreen：配置键与注册机
 
 ---
 
-## 4. 服务层与 Laravel 契约
+## 4. 服务层与 PHP+MySQL 后端契约
 
 ### 4.1 RequestAdapter（注入点）
 
@@ -178,7 +178,7 @@ interface UEditorRequestConfig {
 - 上传：XHR（progress→队列 UI）+ 并发队列（默认 3）+ 客户端预校验（扩展名/MIME/大小/张数——仅体验层，后端为最终防线）
 - 响应判定：`state === 'SUCCESS'`，否则映射类型化 `UEditorError`（兼容原版中文错误串透传）；错误对象日志脱敏（剔除 query 中 token）
 
-### 4.2 Laravel 端契约（仅文档交付；action 集合为裁决后终版）
+### 4.2 PHP 后端契约（仅文档交付；action 集合为裁决后终版；协议与后端栈无关，原样沿用）
 
 | action | 方法 | 要点 |
 |---|---|---|
@@ -190,7 +190,7 @@ interface UEditorRequestConfig {
 
 ### 4.3 后端安全基线（写入交付文档，实现方照单验收）
 
-扩展名双白名单（后缀 + finfo 真实 MIME）；图片二次编码剥离 EXIF/多态载荷；随机文件名；存储盘隔离（public disk 禁执行）；按用户限流；全端点 `auth` + CSRF（`X-CSRF-TOKEN` 经 `beforeRequest` 注入，默认示例）；日志脱敏。原版 PHP/Java demo 后端（官方自述含 SSRF/文件包含漏洞）不迁移、不建议使用。
+扩展名双白名单（后缀 + finfo 真实 MIME）；图片二次编码剥离 EXIF/多态载荷；随机文件名；上传目录与执行权限隔离（webroot 外，或 webserver 配置禁 PHP 执行）；按用户限流；全端点鉴权 + CSRF（token 头名按后端约定，经 `beforeRequest` 注入，示例用 `X-CSRF-Token`）；日志脱敏。原版 PHP/Java demo connector（官方自述含 SSRF/文件包含漏洞）不迁移、不建议直接使用；新 PHP 端须按本节基线自研。
 
 ---
 
@@ -231,7 +231,7 @@ CSRF 全 POST 覆盖；密钥零内置（只走运行时钩子）；直接依赖
 - **语料库**：Word/WPS 各版本粘贴样本（.docx/.rtf/html，中英混排/嵌套表/图文混排约 30 份）+ 网页剪贴样本 + **剪贴板图片粘贴样本**
 - **命令矩阵**：原版 `adapter/editorui.js` 60+ 命令逐条生成用例——同初始内容、同操作序列，新旧 `getContent()` 归一化 diff = 空；三值状态逐事件校验
 - **harness**：Playwright 双栏对照（playground 内嵌原版未构建源码作基准端），M0 建好，每里程碑必须绿才能合
-- 分层：Vitest 单测（filterWord/htmlparser 往返/Range/dtd/上传队列/状态桥/剪贴板拦截）、MSW 模拟 Laravel 全 action e2e、fuzz 语料回归
+- 分层：Vitest 单测（filterWord/htmlparser 往返/Range/dtd/上传队列/状态桥/剪贴板拦截）、MSW 模拟 PHP 后端全 action e2e、fuzz 语料回归
 
 ### 7.2 已知偏差裁决原则
 
@@ -329,3 +329,4 @@ useEditorContext()   // 自定义 component 按钮内取 editor/状态/弹层
 | 第 1 段 | 批准；parse 展示端纳入；charts 定 ECharts+老数据适配器 |
 | 第 2–4 段 | 后端代码不动（仅出契约文档）；配置全前端化（删 config action 拉取）；组件从简 |
 | 第 5–8 段 | 按钮扩展列为显式承诺（→第 8 段）；删除远程抓图与涂鸦；新增剪贴板图片粘贴上传（默认走 uploadimage） |
+| 更正（M0 执行中） | 后端栈为 **PHP + MySQL**（"对接 Laravel"系 AI 从环境上下文误假设，用户更正）。action 协议、响应字段、安全基线不受影响——协议本就与后端栈无关；措辞已全文订正 |
