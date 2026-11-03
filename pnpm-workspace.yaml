@@ -1,0 +1,12 @@
+packages:
+  - packages/*
+  - playground
+catalog:
+  vite: ^5.4.0
+  vitest: ^2.1.0
+  typescript: ^5.5.0
+  vue: ^3.4.0
+  "@vitejs/plugin-vue": ^5.1.0
+  playwright: ^1.46.0
+allowBuilds:
+  esbuild: true
