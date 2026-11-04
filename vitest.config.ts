@@ -4,5 +4,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     passWithNoTests: true,
+    // e2e 目录归 Playwright 执行，混入 vitest 会因运行器 API 不同而失败
+    exclude: ['**/node_modules/**', '**/dist/**', 'e2e/**'],
   },
 });

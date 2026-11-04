@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<!--
+  金标准对照页：左右双栏各挂一个编辑器实例，执行同一命令序列后比对归一化 HTML。
+  NOTE: M0 阶段右栏同为 baseline 引擎，用于自检 harness 自身链路（拼接包/加载/执行/归一化）；
+  M2 起右栏替换为 @ueditor-vue 的 Vue 实例，左栏保持 baseline 作为金标准。
+-->
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <title>金标准对照（baseline harness）</title>
+    <!-- UEDITOR_CONFIG 必须在 bundle 之前就位：_src/editor.js:1 读取 window.UEDITOR_CONFIG，
+         serverUrl 置空使 loadServerConfig 不发 config 请求（getActionUrl 空 serverUrl 返回 ''） -->
+    <script>
+      window.UEDITOR_HOME_URL = '/ueditor-static/';
+      window.UEDITOR_CONFIG = {
+        UEDITOR_HOME_URL: '/ueditor-static/',
+        serverUrl: '',
+      };
+    </script>
+  </head>
+  <body>
+    <h1>baseline 对照自检页</h1>
+    <div style="display:flex;gap:16px">
+      <div style="flex:1">
+        <h2>左栏 A（baseline 引擎）</h2>
+        <script id="ed-a" type="text/plain" style="width:100%;height:320px"></script>
+      </div>
+      <div style="flex:1">
+        <!-- NOTE: M2 替换为 Vue 组件实例 -->
+        <h2>右栏 B（M0: baseline 自检 / M2: Vue 实例）</h2>
+        <script id="ed-b" type="text/plain" style="width:100%;height:320px"></script>
+      </div>
+    </div>
+    <!-- 加载顺序对齐 _examples/completeDemo.html：引擎包 → 语言包 → 装配脚本；
+         主题 CSS（themes/default/_css/ueditor.css）由 adapter/editor.js:848 的 UE.ui.Editor 自动注入宿主页面 -->
+    <script charset="utf-8" src="/@baseline/ueditor.all.js"></script>
+    <script charset="utf-8" src="/ueditor-static/lang/zh-cn/zh-cn.js"></script>
+    <script type="module" src="/src/golden.ts"></script>
+  </body>
+</html>

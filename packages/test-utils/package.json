@@ -8,6 +8,7 @@
     "build": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
+    "@types/node": "^24.19.2",
     "linkedom": "^0.18.15",
     "typescript": "catalog:"
   }
