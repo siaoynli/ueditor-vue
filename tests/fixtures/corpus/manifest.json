@@ -8,17 +8,17 @@
   },
   {
     "id": "word-table-nested-op",
-    "desc": "Word 嵌套表格：o:p 标签 + mso-yfti 表样式 + 表内嵌表 + 条件注释空段占位",
+    "desc": "Word 嵌套表格：o:p 标签 + mso-yfti 表样式 + 表内嵌表 + 条件注释空段占位；对表格整体跑列表命令（M2 需要的表格×命令交叉素材）",
     "channel": "setContent",
     "file": "word-table-nested-op/paste.html",
-    "steps": []
+    "steps": [{ "cmd": "selectall" }, { "cmd": "insertorderedlist" }]
   },
   {
     "id": "word-vml-image",
-    "desc": "Word VML 图形：v:shape/v:imagedata 本地临时路径 + 遗留 img 属性 + v:shapetype 定义",
+    "desc": "Word VML 图形：v:shape/v:imagedata 本地临时路径 + 遗留 img 属性 + v:shapetype 定义；对含 VML 块的内容跑加粗",
     "channel": "setContent",
     "file": "word-vml-image/paste.html",
-    "steps": []
+    "steps": [{ "cmd": "selectall" }, { "cmd": "bold" }]
   },
   {
     "id": "word-fontchain",

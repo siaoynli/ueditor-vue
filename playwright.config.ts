@@ -4,7 +4,7 @@ import { defineConfig, devices } from 'playwright/test';
 export default defineConfig({
   testDir: 'e2e/',
   // 基线快照按简报绑定目录前缀落位 e2e/__snapshots__/<spec 名>/<id>.snap；
-  // Playwright ≥1.44 已移除合并单文件 .snap（一份快照一个文件），此为与简报的唯一差异，见 Task 4 报告
+  // 实测安装的 Playwright 1.64.1 已无合并单文件 .snap 格式（一份快照一个文件），此为与简报的唯一差异，见 Task 4 报告
   snapshotPathTemplate: '{snapshotDir}/__snapshots__/{testFilePath}/{arg}.snap',
   timeout: 60_000,
   expect: { timeout: 10_000 },
