@@ -66,7 +66,7 @@
 |---|---|---|
 | jquery 1.10.2 | 仅 4 个 dialog html（image/video/attachment/charts） | 随 dialogs 重写整体移除 |
 | WebUploader（含 swf） | image/video/attachment 上传器 | 自研 Vue 上传组件，保持第 4 节协议 |
-| highcharts（旧版，商业授权风险） | charts 弹窗 | 待裁决：换 ECharts 懒加载 或 降级扩展点 |
+| highcharts（旧版，商业授权风险） | charts 弹窗 | 已裁决（2026-11-03）：ECharts 懒加载 + 老 highcharts 数据适配器（规格 §3.2/§9） |
 | SyntaxHighlighter | **不在编辑端加载**，仅展示端 ueditor.parse.js 用 | 展示端换 highlight.js 懒加载 |
 | codemirror（旧版） | source 模式 | CodeMirror 6 懒加载 |
 | snapscreen exe / wordimage swf / zeroclipboard | 截屏客户端 / Flash 剪贴板 / Flash 复制兜底 | 截屏裁撤（扩展点）；**wordimage 连同远程抓图功能整体裁撤（用户裁决，不重实现）**；clipboard 用现代 Clipboard API |

@@ -100,6 +100,29 @@ const html = ref('<p>hello</p>');
 
 **扩展点保留（不再直连停服第三方）**：地图（gmap/百度地图）、音乐插入、webapp、截屏——接口与注册机制在，实现由业务方注入。
 
+## Harness 使用说明
+
+```bash
+# 安装依赖
+pnpm install
+
+# 开发服务器（playground 站点，默认 http://localhost:5199）
+pnpm --filter playground dev
+
+# 金标准双栏对照页
+浏览器访问：http://localhost:5199/golden.html
+
+# Word 剪贴板片段采集：启动 dev server 后在页面访问 /capture.html
+将真实 Word 文档内容粘贴到 textarea，点击 Capture 即可写入
+tests/fixtures/corpus/<id>/paste.html；清单 channel 须保持 `setContent`
+生成/更新基线快照：
+pnpm exec playwright test e2e/corpus-baseline.spec.ts --update-snapshots
+平跑（不加 --update-snapshots）验证确定性：同一批次应全部通过、无需重新记录。
+
+# CI 总入口
+pnpm ci    # lint → unit test → build → e2e
+```
+
 ## 目录内容说明
 
 - `ueditor-dev-1.5.0/`：UEditor 原版源码（MIT）留档，行为基准与迁移素材，**只读**。
