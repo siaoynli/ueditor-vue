@@ -1,4 +1,10 @@
 {
   "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // 引擎迁移层保持 JS 逻辑原样（如 namespace.js），供 tsc 解析 './namespace' 之类的 JS 导入
+    "allowJs": true,
+    // 与 build 脚本一致，消除 IDE 对 allowJs 输入文件被 emit 覆盖的告警
+    "noEmit": true
+  },
   "include": ["src"]
 }
