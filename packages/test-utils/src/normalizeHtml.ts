@@ -27,10 +27,17 @@ const VOID_TAGS = new Set([
   'link', 'meta', 'param', 'source', 'track', 'wbr',
 ]);
 
-const collapseWs = (s: string) => s.replace(/\s+/g, ' ');
+// 折叠/判空用显式空白类而非 \s：NBSP（\u00a0）在 Word/mso 语料中是语义字符
+// （缩进序列），若按排版空白处理会被整节点删除，系统性抹平真实差异
+const WS_RUN = /[ \t\r\n\f\v]+/g;
+const WS_ONLY = /^[ \t\r\n\f\v]*$/;
+
+const collapseWs = (s: string) => s.replace(WS_RUN, ' ');
 
 const escapeText = (s: string) =>
-  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    // NBSP 以实体形态输出，保证双侧对称且 diff 可读
+    .replace(/\u00a0/g, '&nbsp;');
 
 const escapeAttr = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;')
@@ -40,8 +47,9 @@ const escapeAttr = (s: string) =>
 function serialize(node: ENode, strip: Set<string>): string {
   if (node.nodeType === TEXT_NODE) {
     const collapsed = collapseWs(node.data ?? node.textContent ?? '');
-    // 纯空白文本节点整节点丢弃：排版缩进/换行不承载内容语义，对照双方一致折叠
-    if (collapsed.trim() === '') return '';
+    // 纯排版空白文本节点整节点丢弃：缩进/换行不承载内容语义，对照双方一致折叠；
+    // 判空用 WS_ONLY 而非 trim()，后者会连 NBSP 一起剥掉
+    if (WS_ONLY.test(collapsed)) return '';
     return escapeText(collapsed);
   }
   if (node.nodeType === COMMENT_NODE) {

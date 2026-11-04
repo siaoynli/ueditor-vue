@@ -24,4 +24,14 @@ describe('normalizeHtml', () => {
   it('注释节点在归一化后保留', () => {
     expect(normalizeHtml('<p>a<!--c-->b</p>')).toBe('<p>a<!--c-->b</p>');
   });
+  // NBSP 是 Word/mso 语料的语义字符（缩进序列），不得按排版空白删除，且须以实体形态输出
+  it('NBSP 保留且以 &nbsp; 实体往返', () => {
+    expect(normalizeHtml('<p>a&nbsp;b</p>')).not.toBe(normalizeHtml('<p>ab</p>'));
+    expect(normalizeHtml('<p>a&nbsp;b</p>')).toBe('<p>a&nbsp;b</p>');
+  });
+  // 实体转义往返是语料 diff 最易静默腐蚀的路径，钉住精确输出
+  it('文本与属性中的实体转义稳定往返', () => {
+    expect(normalizeHtml('<p>a &amp; b</p>')).toBe('<p>a &amp; b</p>');
+    expect(normalizeHtml('<p title="q&quot;uote">x</p>')).toBe('<p title="q&quot;uote">x</p>');
+  });
 });
