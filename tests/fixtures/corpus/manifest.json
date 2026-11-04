@@ -1,0 +1,44 @@
+[
+  {
+    "id": "word-mso-basic",
+    "desc": "Word 导出基础段：mso 条件注释 + class=MsoNormal + mso- 样式 + span lang（前三行为简报逐字样本；baseline 对以注释起始的选区执行命令会抛 TypeError，故 steps 留空，仅采净化链路）",
+    "channel": "setContent",
+    "file": "word-mso-basic/paste.html",
+    "steps": []
+  },
+  {
+    "id": "word-table-nested-op",
+    "desc": "Word 嵌套表格：o:p 标签 + mso-yfti 表样式 + 表内嵌表 + 条件注释空段占位",
+    "channel": "setContent",
+    "file": "word-table-nested-op/paste.html",
+    "steps": []
+  },
+  {
+    "id": "word-vml-image",
+    "desc": "Word VML 图形：v:shape/v:imagedata 本地临时路径 + 遗留 img 属性 + v:shapetype 定义",
+    "channel": "setContent",
+    "file": "word-vml-image/paste.html",
+    "steps": []
+  },
+  {
+    "id": "word-fontchain",
+    "desc": "Word 字体链：mso-ascii/fareast-font-family 多字体族 span + font/size 遗留标签 + 嵌套样式 span；命令效果哨兵（bold 应产出 strong）",
+    "channel": "setContent",
+    "file": "word-fontchain/paste.html",
+    "steps": [{ "cmd": "selectall" }, { "cmd": "bold" }]
+  },
+  {
+    "id": "web-clip-normal",
+    "desc": "网页剪贴普通 HTML：语义标签 + 嵌套列表 + blockquote + pre-in-p 非法嵌套 + data-* 自定义属性",
+    "channel": "setContent",
+    "file": "web-clip-normal/paste.html",
+    "steps": [{ "cmd": "selectall" }, { "cmd": "insertorderedlist" }]
+  },
+  {
+    "id": "plain-text",
+    "desc": "纯文本段：裸文本换行 + 连续空格/制表符 + 中文标点 + NBSP/全角空格 + 裸尖括号转义边界",
+    "channel": "setContent",
+    "file": "plain-text/paste.html",
+    "steps": [{ "cmd": "selectall" }, { "cmd": "lineheight", "args": ["1.5"] }]
+  }
+]
