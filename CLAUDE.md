@@ -101,6 +101,53 @@ ueditor-dev-1.5.0/  # 只读参考
 - 不修改 `ueditor-dev-1.5.0/` 目录任何文件；迁移是"复制或重写进 packages/"，用 Git 记录来源映射（每个迁移文件头注释标注源文件路径）。
 - 原版 PHP/Java demo connector 代码不迁移、不建议直接使用；后端为 **PHP + MySQL 自有端点**（2026-11-03 用户更正，原计划文档误记 Laravel），接口按第 4 节协议实现，校验（类型白名单、大小、频率、CSRF）在后端负责；本项目只交付契约文档不写后端代码。
 
+## 组件运行时约束与审计清单（docs 实践整合，2026-11-04）
+
+来源：`docs/ueditor-1.5.0-vue-ts-migration.md`、`docs/iframe-editor-keep-alive.md`（外部实践建议文档，以下为去冲突后的整合结论；两文档与本规则冲突处见"采纳裁决"）。
+
+### 1. Vue 封装层硬约束（M3 `packages/vue` 实现依据）
+
+- 引擎实例必须存 `shallowRef`/普通变量，**禁止** `ref`/`reactive` 深包装（Proxy 破坏引擎内部判断且性能劣化）
+- v-model 防回环：记录 `lastEmitted`，watch 值相同则跳过 setContent（防光标跳转）
+- `contentchange` 回写 debounce ~200ms（大文档逐键 getContent 是性能雷区）
+- ready 前到达的异步内容缓存 pending，ready 后补写；disabled 切换仅 ready 后生效
+- 隐藏容器（`v-show:false`/未激活 Tab）内不得初始化——iframe 尺寸错乱；可见后再建
+- **keep-alive 陷阱（iframe 派共性）**：组件失活时 iframe 被移动→浏览器重载→引擎 document 引用失效变僵尸。默认策略：编辑器所在页不套 keep-alive（文档明示）；必须支持时走 `onDeactivated` 存内容+`delEditor` 销毁 / `onActivated` 重建（首次激活由 mounted 负责需标志位防双初始化；撤销历史重建即丢，要保则自行快照）。验收：keep-alive 切换 20 次可输入、内容一致、同 id 单实例、无泄漏
+
+### 2. 引擎迁移/浏览器现代化审计项（M1/M2 落地）
+
+- Mutation Events（DOMNodeInserted 等）：Chrome 已移除，迁移时 grep `ueditor-dev-1.5.0/_src` 全部替换 MutationObserver
+- `document.write`/javascript: src 初始化 iframe：CSP 环境可能受限，golden.html 预验；项目默认 CSP 建议记录进交付文档
+- 同步 XHR、`unload` 监听：改异步/`pagehide`（simpleupload 表单通道已在终版契约废除）
+- 本地存储探测：window.localStorage 惰性化（localstorage.js 求值期探测，M1 步骤 8 已列）
+- 粘贴清洗回归：Word/WPS/网页样本集 = M0 语料管线，持续扩充；微信公众号/Markdown 渲染源补充进采集清单
+- 高分屏/暗色：编辑区 iframe 内样式经 `iframeCssUrl`/`initialStyle` 注入，主题切换须同步 iframe document（M5/M6 主题令牌设计输入）
+
+### 3. 选区浮层/AI 联动规范（扩展体系，规格 §8 场景补充）
+
+- 选区一律走引擎 `editor.selection`，禁用宿主 `window.getSelection()`（焦点在 iframe 时指向 iframe 元素）
+- 浮层放主文档，坐标 = iframe 内 `range.getClientRects()` + iframe 自身 `getBoundingClientRect()` 修正，监听内外双侧滚动
+- 流式插入按 50–100ms/句合并批量 `insertHtml`，整段输出合并为一次撤销步骤（防选区撕裂+undo 栈爆炸）
+- 宿主全局快捷键进 iframe 后失联：经引擎 `keydown` 事件转发一层
+
+### 4. 安全补强（并入既有规格，非新增项）
+
+- 服务端存储前白名单净化（HTMLPurifier 类）+ 渲染前再净化——前端 DOMPurify（规格 §5.1）不是服务端免净化的理由
+- XSS fuzz 语料显式含：SVG、onerror、`javascript:`、CSS expression、编码绕过（M6 测试扩展）
+- 历史内容回显测试：从真实存量抽样（建议 ≥50 条）批量 setContent→getContent 结构 diff，归 M6 验收
+- 渲染产物挂 `.rich-content` 类做样式作用域
+
+### 采纳裁决（两文档与本项目已裁决决策的冲突，以裁决为准）
+
+| 文档主张 | 裁决 | 理由 |
+|---|---|---|
+| §1 建议 L1/L2 封装，"不做 L3 核心重写"（理由：无自动化测试保护） | **不采纳其结论，采纳其担忧** | 已批准路线 B 迁移的是经产验证的引擎算法（非重写）；其担忧的"没有测试"缺口已由 M0 金标准 harness 闭合。其"封装层隔离、可替换编辑器"精神= 规格 §1.1 单向依赖墙 |
+| 后端示例为 Laravel/Sanctum | 术语转写：本项目为 PHP+MySQL 自有端点（已裁决） | 协议与栈无关 |
+| 上传鉴权"serverUrl query 带短期 token" | **不采纳** | query 明文 token 入日志违反安全红线；走同域 Cookie/Session + CSRF（beforeRequest 注入） |
+| §8/§9 catchimage/涂鸦/scrawl 处置建议 | 已整体裁撤（用户裁决在前） | 不适用 |
+| ueditor.parse.js "建议直接弃用" | **不采纳** | parse 端展示复刻已批准纳入（存量内容渲染是刚需，净化前置已设计） |
+| 组件 API 用 `window.UE.getEditor` 全局面 | 不适用封装层 | 封装层走 `useEditor()`/inject；`window.UE` 全局面在核心迁移中拆除（iframe 引导单面 `__ueditorRegistry__` 为内部实现细节） |
+
 ## 设计裁决记录（2026-11-03，全部通过）
 
 完整规格：`docs/superpowers/specs/2026-11-03-ueditor-vue-design.md`（八段 + 修订轨迹）。要点：
