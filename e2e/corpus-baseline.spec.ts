@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { expect, test } from 'playwright/test';
 import { normalizeHtml } from '../packages/test-utils/src/normalizeHtml';
+import { validateCorpus } from '../packages/test-utils/src/validateCorpus';
 import type { CmdStep } from '../packages/test-utils/src/runSequence';
 
 /**
@@ -12,15 +13,6 @@ import type { CmdStep } from '../packages/test-utils/src/runSequence';
  * （或薄包装 node scripts/gen-baseline.ts）
  */
 
-/** manifest 条目 schema，字段名与简报绑定（id/desc/channel/file/steps） */
-interface CorpusEntry {
-  id: string;
-  desc: string;
-  channel: 'setContent';
-  file: string;
-  steps: CmdStep[];
-}
-
 interface HarnessWindow {
   __ready?: boolean;
   __runOn?: (which: 'a' | 'b', html: string, steps: CmdStep[]) => Promise<string>;
@@ -29,24 +21,11 @@ interface HarnessWindow {
 // file 字段相对 manifest 所在目录解析
 const corpusDir = fileURLToPath(new URL('../tests/fixtures/corpus', import.meta.url));
 
-const manifest = JSON.parse(
-  fs.readFileSync(path.join(corpusDir, 'manifest.json'), 'utf8'),
-) as CorpusEntry[];
-
-// 采集期静态校验：id 唯一 + channel 恒为 setContent（Review Focus 4）。
-// 新增通道必须先过契约评审再放开，这里 fail-fast 防语料静默混入。
-{
-  const seen = new Set<string>();
-  for (const entry of manifest) {
-    if (seen.has(entry.id)) throw new Error(`manifest id 重复：${entry.id}`);
-    seen.add(entry.id);
-    if (entry.channel !== 'setContent') {
-      throw new Error(
-        `条目 ${entry.id} channel 非法：${entry.channel}（M0 仅支持 setContent）`,
-      );
-    }
-  }
-}
+// 采集期静态校验 fail-fast（id 唯一、channel 白名单、file/steps/cmd/args 结构校验，
+// 规则与理由见 validateCorpus），防结构非法的语料双侧同步 no-op 造成假绿
+const manifest = validateCorpus(
+  JSON.parse(fs.readFileSync(path.join(corpusDir, 'manifest.json'), 'utf8')),
+);
 
 for (const entry of manifest) {
   test(entry.id, async ({ page }) => {

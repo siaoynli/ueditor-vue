@@ -24,10 +24,13 @@ describe('normalizeHtml', () => {
   it('注释节点在归一化后保留', () => {
     expect(normalizeHtml('<p>a<!--c-->b</p>')).toBe('<p>a<!--c-->b</p>');
   });
-  // NBSP 是 Word/mso 语料的语义字符（缩进序列），不得按排版空白删除，且须以实体形态输出
+  // NBSP 是 Word/mso 语料的语义字符（缩进序列），不得按排版空白删除，且须以实体形态输出；
+  // 属性值同样要实体化，否则与 escapeText 不对称（属性内 NBSP 原样输出会腐蚀 diff 可读性）
   it('NBSP 保留且以 &nbsp; 实体往返', () => {
     expect(normalizeHtml('<p>a&nbsp;b</p>')).not.toBe(normalizeHtml('<p>ab</p>'));
     expect(normalizeHtml('<p>a&nbsp;b</p>')).toBe('<p>a&nbsp;b</p>');
+    // 属性值内字面 NBSP（U+00A0）须输出为 &nbsp;
+    expect(normalizeHtml('<p title="a\u00a0b">x</p>')).toBe('<p title="a&nbsp;b">x</p>');
   });
   // 实体转义往返是语料 diff 最易静默腐蚀的路径，钉住精确输出
   it('文本与属性中的实体转义稳定往返', () => {

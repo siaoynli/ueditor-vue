@@ -115,12 +115,15 @@ pnpm --filter playground dev
 # Word 剪贴板片段采集：启动 dev server 后在页面访问 /capture.html
 将真实 Word 文档内容粘贴到 textarea，点击 Capture 即可写入
 tests/fixtures/corpus/<id>/paste.html；清单 channel 须保持 `setContent`
-生成/更新基线快照：
-pnpm exec playwright test e2e/corpus-baseline.spec.ts --update-snapshots
-平跑（不加 --update-snapshots）验证确定性：同一批次应全部通过、无需重新记录。
 
-# CI 总入口
-pnpm ci    # lint → unit test → build → e2e
+# 生成/更新基线快照：
+pnpm exec playwright test e2e/corpus-baseline.spec.ts --update-snapshots
+不带 --update-snapshots 复跑验证确定性：同一批次应全部通过、无需重新记录。
+
+# CI 总入口（聚合：lint → 单测 → 类型检查 → 构建 → e2e）
+# 命名用 check 而非 ci：pnpm ≥10 的 `pnpm ci` 是内置 clean install，会遮蔽同名脚本，
+# 若沿用 ci 名，误敲 `pnpm ci` 只会重装依赖而不跑任何校验——正是本 harness 要防的"假绿"反向坑
+pnpm check
 ```
 
 ## 目录内容说明

@@ -21,22 +21,33 @@ declare global {
   }
 }
 
-const editors: Record<'a' | 'b', EditorLike> = {
-  a: window.UE.getEditor('ed-a', { initialFrameHeight: 280, initialFrameWidth: '100%' }),
-  b: window.UE.getEditor('ed-b', { initialFrameHeight: 280, initialFrameWidth: '100%' }),
-};
-
-window.__ready = false;
-window.__runOn = async (which, html, steps) => {
-  const editor = editors[which];
-  editor.setContent(html);
-  return runSequence(editor, steps);
-};
-
 function waitReady(editor: EditorLike): Promise<void> {
   return new Promise((resolve) => editor.ready(() => resolve()));
 }
 
-void Promise.all([waitReady(editors.a), waitReady(editors.b)]).then(() => {
-  window.__ready = true;
-});
+// baseline bundle（/@baseline/ueditor.all.js）404 时 window.UE 缺失：若不先拦，
+// 顶层 getEditor 直接抛不可读的 TypeError，__runOn 注册不上，e2e 只能等 30s 超时且无成因
+if (!window.UE) {
+  console.error('[harness] window.UE 缺失：baseline bundle 可能 404');
+  window.__ready = false;
+  // 注册可读错误入口：page.evaluate 能把该 Error 原样抛回测试输出
+  window.__runOn = async () => {
+    throw new Error('baseline 未加载：window.UE 缺失');
+  };
+} else {
+  const editors: Record<'a' | 'b', EditorLike> = {
+    a: window.UE.getEditor('ed-a', { initialFrameHeight: 280, initialFrameWidth: '100%' }),
+    b: window.UE.getEditor('ed-b', { initialFrameHeight: 280, initialFrameWidth: '100%' }),
+  };
+
+  window.__ready = false;
+  window.__runOn = async (which, html, steps) => {
+    const editor = editors[which];
+    editor.setContent(html);
+    return runSequence(editor, steps);
+  };
+
+  void Promise.all([waitReady(editors.a), waitReady(editors.b)]).then(() => {
+    window.__ready = true;
+  });
+}

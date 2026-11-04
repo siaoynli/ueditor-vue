@@ -1,0 +1,8 @@
+{
+  // playground 无构建产物，纳入根 ci 的 typecheck 门禁（根 scripts.typecheck = tsc -p playground --noEmit），
+  // 弥补根 build 只过滤 ./packages/** 造成的 golden.ts/ueditorBaseline.ts 类型漂移只能靠运行期暴露的问题
+  "extends": "../tsconfig.base.json",
+  "include": ["src", "plugins", "vite.config.ts"],
+  // e2e 归 Playwright 自己编译，不在 playground 类型检查范围
+  "exclude": ["e2e", "node_modules", "dist"]
+}

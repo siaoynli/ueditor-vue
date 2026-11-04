@@ -41,7 +41,9 @@ const escapeText = (s: string) =>
 
 const escapeAttr = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+    // NBSP 同 escapeText 以实体形态输出：属性内（mso style 等）若原样透传会与文本侧不对称
+    .replace(/\u00a0/g, '&nbsp;');
 
 /** 深度遍历手动序列化：linkedom 的 outerHTML 不保证属性排序，需自控输出形态 */
 function serialize(node: ENode, strip: Set<string>): string {
